@@ -2,36 +2,119 @@ import puppeteer from 'puppeteer';
 
 export async function scrapeComments(videoUrl, max = 20) {
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: "new",
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-blink-features=AutomationControlled', // Key anti-detection flag
+    ],
   });
 
-  const page = await browser.newPage();
+  try {
+    const page = await browser.newPage();
 
-  // Setup for real-user-like browsing
-  await page.setViewport({ width: 1280, height: 800 });
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36');
+    // Mask automation fingerprints
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
 
-  await page.goto(videoUrl, { waitUntil: 'domcontentloaded' });
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    );
 
-  // Wait for comments section
-  await page.waitForSelector('ytd-comments', { timeout: 15000 });
+    console.log(`[Scraper] Targeted URL: ${videoUrl}`);
+    await page.goto(videoUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-  // Scroll down a few times
-  for (let i = 0; i < 10; i++) {
-    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Handle consent dialog
+    try {
+      const consentSelectors = [
+        'button[aria-label="Accept all"]',
+        'button[aria-label="I agree"]',
+      ];
+      for (const sel of consentSelectors) {
+        const btn = await page.$(sel);
+        if (btn) {
+          await btn.click();
+          await new Promise(r => setTimeout(r, 2000));
+          break;
+        }
+      }
+    } catch (_) {}
+
+    const isShort = videoUrl.includes('/shorts/');
+
+    if (!isShort) {
+      console.log('[Scraper] Triggering comment section...');
+
+      // Scroll down past the video to trigger comment lazy-loading
+      await page.evaluate(() => window.scrollTo(0, 600));
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Wait for the comments container
+      try {
+        await page.waitForSelector('ytd-comments', { timeout: 15000 });
+      } catch (_) {
+        console.warn('[Scraper] ytd-comments not found, proceeding anyway...');
+      }
+
+      console.log('[Scraper] Scrolling to populate comments...');
+      // Scroll multiple times with pauses to trigger comment rendering
+      for (let i = 0; i < 8; i++) {
+        await page.evaluate(() => window.scrollBy(0, 800));
+        await new Promise(r => setTimeout(r, 1800));
+      }
+    } else {
+      // Shorts: click the comment button
+      const shortsSelectors = [
+        'button[aria-label="Comments"]',
+        '#comments-button button',
+      ];
+      for (const sel of shortsSelectors) {
+        const btn = await page.$(sel);
+        if (btn) {
+          await btn.click();
+          await new Promise(r => setTimeout(r, 2500));
+          break;
+        }
+      }
+    }
+
+    // Try multiple selectors — YouTube's DOM varies
+    const commentSelectors = [
+      'ytd-comment-thread-renderer #content-text',
+      '#content-text',
+      'yt-attributed-string.ytd-comment-renderer',
+    ];
+
+    let comments = [];
+    for (const selector of commentSelectors) {
+      try {
+        await page.waitForSelector(selector, { timeout: 15000 });
+        comments = await page.$$eval(
+          selector,
+          (els, limit) =>
+            els
+              .slice(0, limit)
+              .map(el => el.textContent.trim())
+              .filter(t => t.length > 0),
+          max
+        );
+        if (comments.length > 0) {
+          console.log(`[Scraper] Extraction successful. Found ${comments.length} comments.`);
+          break;
+        }
+      } catch (_) {
+        console.warn(`[Scraper] Selector failed: ${selector}`);
+      }
+    }
+
+    if (comments.length === 0) {
+      throw new Error('No comments found — YouTube may be blocking the scraper or comments are disabled.');
+    }
+
+    return comments;
+  } finally {
+    await browser.close();
   }
-
-  await page.waitForSelector('#content-text', { timeout: 15000 });
-
-  // ✅ Pass `max` as 2nd param to $$eval
-  const comments = await page.$$eval(
-    '#content-text',
-    (elements, limit) => elements.slice(0, limit).map(el => el.textContent.trim()),
-    max
-  );
-
-  await browser.close();
-  return comments;
 }

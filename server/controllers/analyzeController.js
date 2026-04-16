@@ -1,7 +1,7 @@
 import { scrapeComments } from '../scrapers/youtubeScraper.js';
-import { ChatOpenAI } from '@langchain/openai';
 import dotenv from 'dotenv';
 
+// Load .env BEFORE any SDK initialization
 dotenv.config();
 
 export const analyzeVideo = async (req, res) => {
@@ -13,8 +13,17 @@ export const analyzeVideo = async (req, res) => {
 
     const comments = await scrapeComments(videoUrl, 50);
 
+    // Verify key is actually loaded
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not set in your .env file');
+    }
+
+    // Import ChatOpenAI AFTER dotenv.config() has run
+    const { ChatOpenAI } = await import('@langchain/openai');
+
     const model = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
+      openAIApiKey: apiKey,
       temperature: 0.5,
     });
 
@@ -36,9 +45,12 @@ Please analyze them and:
       { role: 'user', content: userPrompt },
     ]);
 
-    res.json({ sentimentAnalysis: response, commentsCount: comments.length });
+    res.json({
+      sentimentAnalysis: response.content, // Extract .content from AIMessage
+      commentsCount: comments.length,
+    });
   } catch (err) {
-    console.error('Error in analyzeVideo:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in analyzeVideo:', err.message);
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 };

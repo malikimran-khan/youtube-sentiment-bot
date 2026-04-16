@@ -1,1 +1,85 @@
 @import "tailwindcss";
+
+@theme {
+  --color-accent: #c0e640;
+  --color-primary: #033a45;
+}
+
+:root {
+  --neon-cyan: #00f2ff;
+  --neon-indigo: #6366f1;
+  --neon-lime: #c0e640;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background: #020617;
+  color: #f8fafc;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Animated Gradient Background */
+.bg-gradient-animate {
+  background: radial-gradient(circle at 50% 50%, #033a45 0%, #020617 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.05) 0%, rgba(0, 0, 0, 0) 70%);
+  filter: blur(60px);
+  border-radius: 50%;
+  z-index: -1;
+  animation: move 20s infinite alternate;
+}
+
+@keyframes move {
+  from { transform: translate(-10%, -10%); }
+  to { transform: translate(20%, 20%); }
+}
+
+.neon-border {
+  position: relative;
+}
+
+.neon-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, var(--neon-cyan), var(--neon-indigo));
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.neon-border:focus-within::after {
+  opacity: 0.8;
+}
+
+/* Custom Multi-line text formatting */
+.sentiment-content {
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.sentiment-content strong {
+  color: var(--neon-lime);
+}
