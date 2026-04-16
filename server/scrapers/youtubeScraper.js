@@ -1,13 +1,25 @@
 import puppeteer from 'puppeteer';
 
 export async function scrapeComments(videoUrl, max = 20) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   const browser = await puppeteer.launch({
     headless: "new",
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-blink-features=AutomationControlled', // Key anti-detection flag
+      '--disable-blink-features=AutomationControlled',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      ...(isProduction ? [
+        '--single-process',
+        '--no-zygote',
+        '--disable-gpu'
+      ] : [])
     ],
+    ...(isProduction && {
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    })
   });
 
   try {

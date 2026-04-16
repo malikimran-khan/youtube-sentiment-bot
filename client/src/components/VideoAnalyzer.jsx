@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Youtube, BarChart3, MessageSquare, Sparkles, Loader2, AlertCircle, CheckCircle2, LayoutGrid, Info } from 'lucide-react';
+import { Search, Video, BarChart3, MessageSquare, Sparkles, Loader2, AlertCircle, CheckCircle2, LayoutGrid, Info } from 'lucide-react';
 
 export default function VideoAnalyzer() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -10,7 +10,7 @@ export default function VideoAnalyzer() {
   const [status, setStatus] = useState('');
 
   const loadingSteps = [
-    { text: 'Accessing YouTube...', icon: <Youtube className="w-4 h-4" /> },
+    { text: 'Accessing YouTube...', icon: <Video className="w-4 h-4" /> },
     { text: 'Extracting Comments...', icon: <MessageSquare className="w-4 h-4" /> },
     { text: 'AI Sentiment Processing...', icon: <BarChart3 className="w-4 h-4" /> },
     { text: 'Generating Insights...', icon: <Sparkles className="w-4 h-4" /> },
@@ -31,7 +31,7 @@ export default function VideoAnalyzer() {
     }, 2500);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/analyze', { videoUrl });
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/analyze`, { videoUrl });
       setResult(res.data);
     } catch (err) {
       console.error(err);
@@ -108,7 +108,7 @@ export default function VideoAnalyzer() {
             className="flex flex-col items-center gap-6 mt-4"
           >
             <div className="relative">
-              <div className="w-20 h-20 border-core border-4 border-slate-800 rounded-full" />
+              <div className="w-20 h-20 border-solid border-4 border-slate-800 rounded-full" />
               <div className="absolute inset-0 w-20 h-20 border-t-4 border-accent rounded-full animate-spin shadow-[0_0_15px_rgba(192,230,64,0.4)]" />
             </div>
             <div className="flex items-center gap-2 text-accent font-semibold text-lg tracking-wide uppercase">
