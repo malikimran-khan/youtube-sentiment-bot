@@ -17,26 +17,8 @@ app.use(helmet({
 }));
 
 // CORS configuration using cors middleware
-const allowedOrigins = [
-  'https://ai-youtube-sentiment-bot.vercel.app',
-  'https://youtube-sentiment-bot.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:5000'
-];
-
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
