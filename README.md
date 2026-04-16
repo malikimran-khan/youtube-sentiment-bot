@@ -197,15 +197,19 @@ Health check endpoint for monitoring.
 }
 ```
 
-### GET `/api/test-cors`
-Test endpoint to verify CORS configuration.
+### GET `/api/debug`
+Debug endpoint to test server configuration and CORS.
 
 **Response:**
 ```json
 {
-  "message": "CORS is working!",
+  "message": "Debug endpoint working",
   "origin": "https://your-frontend-domain.com",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+  "method": "GET",
+  "headers": {...},
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "environment": "production",
+  "vercel": true
 }
 ```
 

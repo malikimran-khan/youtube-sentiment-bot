@@ -28,6 +28,20 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+// Additional CORS middleware for Vercel compatibility
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+
+  next();
+});
+
 
 // Rate limiting
 const limiter = rateLimit({
@@ -44,6 +58,19 @@ app.use(express.json({ limit: '10mb' }));
 
 // Routes
 app.post('/api/analyze', analyzeVideo);
+
+// Debug endpoint for CORS testing
+app.get('/api/debug', (req, res) => {
+  res.json({
+    message: 'Debug endpoint working',
+    origin: req.headers.origin,
+    method: req.method,
+    headers: req.headers,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'unknown',
+    vercel: !!process.env.VERCEL
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -82,7 +109,7 @@ const PORT = process.env.PORT || 5000;
 
 // For Vercel serverless functions
 if (process.env.VERCEL) {
-  module.exports = app;
+  export default app;
 } else {
   // For local development
   const server = app.listen(PORT, () => {
