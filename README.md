@@ -191,6 +191,20 @@ Health check endpoint for monitoring.
 ```json
 {
   "status": "OK",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "environment": "production",
+  "cors": "enabled"
+}
+```
+
+### GET `/api/test-cors`
+Test endpoint to verify CORS configuration.
+
+**Response:**
+```json
+{
+  "message": "CORS is working!",
+  "origin": "https://your-frontend-domain.com",
   "timestamp": "2024-01-01T12:00:00.000Z"
 }
 ```
@@ -222,6 +236,35 @@ cd ../server
 docker build -t voxtube-ai .
 docker run -p 5000:5000 voxtube-ai
 ```
+
+#### Vercel (Serverless)
+1. **Deploy Backend First:**
+   ```bash
+   # Install Vercel CLI
+   npm i -g vercel
+
+   # Deploy server
+   cd server
+   vercel --prod
+   ```
+   Copy the deployment URL (e.g., `https://youtube-sentiment-bot.vercel.app`)
+
+2. **Update Frontend Environment:**
+   ```env
+   VITE_API_BASE_URL=https://your-vercel-api-url.vercel.app
+   ```
+
+3. **Deploy Frontend:**
+   ```bash
+   cd client
+   vercel --prod
+   ```
+
+   **Note:** If you encounter CORS issues after deployment, try these steps:
+   1. Test the CORS endpoint: `GET https://your-api-url.vercel.app/api/test-cors`
+   2. Redeploy the backend: `cd server && vercel --prod`
+   3. Update frontend environment variables if needed
+   4. Clear browser cache and try again
 
 ### Environment Variables for Production
 ```env
