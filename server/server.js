@@ -107,11 +107,8 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-// For Vercel serverless functions
-if (process.env.VERCEL) {
-  export default app;
-} else {
-  // For local development
+// For local development
+if (!process.env.VERCEL) {
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   });
@@ -131,3 +128,7 @@ if (process.env.VERCEL) {
     });
   });
 }
+
+// For Vercel serverless functions and other module loaders
+export default app;
+
